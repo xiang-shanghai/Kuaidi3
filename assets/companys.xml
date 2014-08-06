@@ -1,0 +1,17 @@
+<companys>
+	<company>
+		<name>顺丰快递</name>
+		<code>shunfeng</code>
+		<image>shunfeng.png</image>
+	</company>
+	<company>
+		<name>圆通速递</name>
+		<code>yuantong</code>
+		<image>yuantong.png</image>
+	</company>
+	<company>
+		<name>韵达快递</name>
+		<code>yunda</code>
+		<image>yunda.png</image>
+	</company>
+</companys>
