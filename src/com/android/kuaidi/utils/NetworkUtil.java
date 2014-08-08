@@ -22,8 +22,8 @@ public class NetworkUtil {
 		ConnectivityManager manager = (ConnectivityManager)mContext.getSystemService(
 				Context.CONNECTIVITY_SERVICE);
 		NetworkInfo info = manager.getActiveNetworkInfo();
-		
-		return info.isConnectedOrConnecting();
+		if(info == null) return false;
+		return info.isConnected();
 	}
 	
 	public String getResult(String url) {		

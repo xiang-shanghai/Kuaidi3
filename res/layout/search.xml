@@ -24,4 +24,15 @@
         android:layout_height="wrap_content"
         android:text="@string/btn_search"
         />
+    <ScrollView
+        android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+        >
+	    <TextView 
+	        android:id="@+id/txtDisplay"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:textAppearance="?android:attr/textAppearanceMedium"
+	        />
+    </ScrollView>
 </LinearLayout>
