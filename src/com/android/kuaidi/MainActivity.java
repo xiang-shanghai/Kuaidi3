@@ -17,15 +17,21 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.app.ActionBar.LayoutParams;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -33,18 +39,23 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.SearchView;
+import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class MainActivity extends Activity implements OnItemClickListener{
+public class MainActivity extends Activity implements OnItemClickListener, OnQueryTextListener{
 	ListView listView;
 	ProgressDialog dialog;
+	SearchView mSearchView;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);		
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		//requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
+		
+		
 		
 		dialog = new ProgressDialog(this);
 		dialog.setMessage(getString(R.string.dialog_message));
@@ -53,8 +64,86 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		listView = (ListView)findViewById(R.id.company_list);
 		listView.setOnItemClickListener(this);
 		
+		
 		new InitThread().start();
 	}
+	
+//	void initActionbar() {
+//		ActionBar bar = getActionBar();
+//		bar.setDisplayShowHomeEnabled(false);
+//		bar.setDisplayShowTitleEnabled(false);
+//		bar.setDisplayShowTitleEnabled(true);
+//		LayoutInflater inflater = (LayoutInflater)getSystemService(
+//				Context.LAYOUT_INFLATER_SERVICE);
+//		View actionbarView = inflater.inflate(R.layout.action_bar, null);
+//		bar.setCustomView(actionbarView, 
+//				new ActionBar.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+//		
+//		mSearchView = (SearchView)actionbarView.findViewById(R.id.search_view);
+//		bar.show();
+//	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// TODO Auto-generated method stub
+		
+		MenuInflater menuInflater = getMenuInflater();
+		menuInflater.inflate(R.menu.main, menu);
+		MenuItem item = menu.findItem(R.id.action_search);
+		//if(item != null) {
+			mSearchView = (SearchView)item.getActionView();
+			mSearchView.setOnQueryTextListener(this);
+		//}
+		return true;
+	}
+	
+	
+
+	@Override
+	public boolean onQueryTextChange(String newText) {
+		// TODO Auto-generated method stub
+		
+		if(TextUtils.isEmpty(newText)) {
+			listView.clearTextFilter();
+			
+			
+		} else {
+			//∆•≈‰
+			List<Map<String, String>> maps = new ArrayList<Map<String,String>>();	
+			List<String> names = new ArrayList<String>();
+			List<String> icons = new ArrayList<String>();
+			List<String> codes = new ArrayList<String>();
+			for (int i = 0; i < listView.getAdapter().getCount(); i++) {
+				List<Map<String, String>> item = (List<Map<String,String>>)listView.getAdapter().getItem(i);
+				String name = item.get(0).get("name");
+				String code = item.get(0).get("code");	
+				
+				if(newText.equals(name) || newText.equals(code)) {
+//					Map<String, String> map = new HashMap<String, String>();
+//					map = item.get(i);
+//					maps.add(map);
+					names.add(name);
+					codes.add(code);
+					icons.add(item.get(0).get("icon"));
+					
+				}
+			}
+			
+			if(names.size() > 0){
+				MyAdapter adapter = new MyAdapter(MainActivity.this, names, icons, codes);
+				listView.setAdapter(adapter);
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean onQueryTextSubmit(String query) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
 
 	class InitThread extends Thread {
 		@Override
@@ -164,6 +253,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			Map<String, String> map = new HashMap<String, String>();
 			map.put("name", names.get(position));
 			map.put("code", codes.get(position));
+			map.put("icon", icons.get(position));
 			lists.add(map);
 			return lists;
 		}
@@ -184,8 +274,12 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			((TextView)view.findViewById(R.id.company_name)).setText(names.get(position));
 			ImageView imageView = (ImageView)view.findViewById(R.id.company_icon);
 			try {
-				Bitmap bm = BitmapFactory.decodeStream(getAssets().open(icons.get(position)));
-				imageView.setImageBitmap(bm);
+				if(icons.get(position) !=null && !icons.get(position).equals("")) {
+					Bitmap bm = BitmapFactory.decodeStream(getAssets().open(icons.get(position)));
+					imageView.setImageBitmap(bm);
+				} else {
+					imageView.setImageResource(R.drawable.ic_launcher);
+				}
 			} catch (Exception e) {
 				// TODO: handle exception
 				Log.i("wx", "adapter=== " + e.getMessage());
