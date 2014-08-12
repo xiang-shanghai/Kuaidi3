@@ -10,9 +10,30 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/select_company"
         />
-    <ListView 
-        android:id="@+id/company_list"
+    <FrameLayout 
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"        
-        />
+        android:layout_height="match_parent"
+        >
+        <ListView 
+	        android:id="@+id/company_list"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"        
+	        />
+        <TextView
+            android:id="@+id/dialog"
+            android:layout_width="80.0dip"
+            android:layout_height="80.0dip"
+            android:layout_gravity="center"            
+            android:gravity="center"
+            android:textColor="#ffffffff"
+            android:textSize="30.0dip"
+            android:visibility="invisible" />
+
+        <com.android.kuaidi.SliderView
+            android:id="@+id/sliderview"
+            android:layout_width="30.0dip"
+            android:layout_height="fill_parent"
+            android:layout_gravity="right|center" />
+    </FrameLayout>
+    
 </LinearLayout>

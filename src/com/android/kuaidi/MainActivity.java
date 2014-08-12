@@ -3,6 +3,7 @@ package com.android.kuaidi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 
+import com.android.kuaidi.SliderView.OnTouchingLettersChangedListener;
 import com.android.kuaidi.utils.CompanyHandler;
 
 import android.os.Bundle;
@@ -41,13 +43,17 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SearchView.OnQueryTextListener;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class MainActivity extends Activity implements OnItemClickListener, OnQueryTextListener{
+public class MainActivity extends Activity implements OnItemClickListener, 
+															OnQueryTextListener{
 	ListView listView;
 	ProgressDialog dialog;
 	SearchView mSearchView;
+	SliderView sliderView;
+	MyAdapter sortAdapter;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -64,24 +70,25 @@ public class MainActivity extends Activity implements OnItemClickListener, OnQue
 		listView = (ListView)findViewById(R.id.company_list);
 		listView.setOnItemClickListener(this);
 		
+		sliderView = (SliderView)findViewById(R.id.sliderview);
+		sliderView.setTextView((TextView)findViewById(R.id.dialog));
+		sliderView.setOnTouchingLettersChangedListener(new OnTouchingLettersChangedListener() {
+			
+			@Override
+			public void onTouchingLettersChanged(String letters) {
+				// TODO Auto-generated method stub
+				//该字母首次出现的位置
+				int position = sortAdapter.getPositionForSection(letters.charAt(0));
+				if(position != -1) {
+					listView.setSelection(position);
+				}
+			}
+		});
+		
 		
 		new InitThread().start();
 	}
 	
-//	void initActionbar() {
-//		ActionBar bar = getActionBar();
-//		bar.setDisplayShowHomeEnabled(false);
-//		bar.setDisplayShowTitleEnabled(false);
-//		bar.setDisplayShowTitleEnabled(true);
-//		LayoutInflater inflater = (LayoutInflater)getSystemService(
-//				Context.LAYOUT_INFLATER_SERVICE);
-//		View actionbarView = inflater.inflate(R.layout.action_bar, null);
-//		bar.setCustomView(actionbarView, 
-//				new ActionBar.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-//		
-//		mSearchView = (SearchView)actionbarView.findViewById(R.id.search_view);
-//		bar.show();
-//	}
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -104,35 +111,9 @@ public class MainActivity extends Activity implements OnItemClickListener, OnQue
 		// TODO Auto-generated method stub
 		
 		if(TextUtils.isEmpty(newText)) {
-			listView.clearTextFilter();
-			
 			
 		} else {
-			//匹配
-			List<Map<String, String>> maps = new ArrayList<Map<String,String>>();	
-			List<String> names = new ArrayList<String>();
-			List<String> icons = new ArrayList<String>();
-			List<String> codes = new ArrayList<String>();
-			for (int i = 0; i < listView.getAdapter().getCount(); i++) {
-				List<Map<String, String>> item = (List<Map<String,String>>)listView.getAdapter().getItem(i);
-				String name = item.get(0).get("name");
-				String code = item.get(0).get("code");	
-				
-				if(newText.equals(name) || newText.equals(code)) {
-//					Map<String, String> map = new HashMap<String, String>();
-//					map = item.get(i);
-//					maps.add(map);
-					names.add(name);
-					codes.add(code);
-					icons.add(item.get(0).get("icon"));
-					
-				}
-			}
 			
-			if(names.size() > 0){
-				MyAdapter adapter = new MyAdapter(MainActivity.this, names, icons, codes);
-				listView.setAdapter(adapter);
-			}
 		}
 		return false;
 	}
@@ -201,8 +182,29 @@ public class MainActivity extends Activity implements OnItemClickListener, OnQue
 					icons.add(company.getIcon());
 					codes.add(company.getCode());
 				}
-				MyAdapter adapter = new MyAdapter(MainActivity.this, names, icons, codes);
-				listView.setAdapter(adapter);
+				
+				List<SortModel> sortList = new ArrayList<SortModel>();
+				for (int i = 0; i < names.size(); i++) {
+					SortModel sortModel = new SortModel();
+					sortModel.setName(names.get(i));
+					//汉字转为拼音
+					String pinyin = CharacterParser.getInstance().getSelling(names.get(i));
+					String sortString = pinyin.substring(0, 1).toUpperCase();
+					//判断是否是英文字母
+					if(sortString.matches("[A-Z]")) {
+						sortModel.setLettters(sortString.toUpperCase());
+					} else {
+						sortModel.setLettters("#");
+					}
+					
+					sortList.add(sortModel);
+				}
+				
+				sortAdapter = new MyAdapter(MainActivity.this, sortList, codes);
+				listView.setAdapter(sortAdapter);
+				
+				
+				
 				dialog.dismiss();
 				break;
 
@@ -228,33 +230,43 @@ public class MainActivity extends Activity implements OnItemClickListener, OnQue
 		startActivity(intent);
 	}
 
-	class MyAdapter extends BaseAdapter {
+	class MyAdapter extends BaseAdapter implements SectionIndexer{
 		Context mContext;
 		List<String> names;
 		List<String> icons;
 		List<String> codes;
-		public MyAdapter(Context context, List<String> names, List<String> icons, List<String> codes) {
+		List<SortModel> sortList;
+//		public MyAdapter(Context context, List<String> names, List<String> icons, List<String> codes) {
+//			this.mContext = context;
+//			this.names = names;
+//			this.icons = icons;
+//			this.codes = codes;
+//		}
+		
+		public MyAdapter(Context context, List<SortModel> sortList, List<String> codes) {
 			this.mContext = context;
-			this.names = names;
-			this.icons = icons;
+			this.sortList = sortList;
 			this.codes = codes;
 		}
 		
 		@Override
 		public int getCount() {
 			// TODO Auto-generated method stub
-			return names.size();
+			return this.sortList.size();
 		}
 
 		@Override
-		public Object getItem(int position) {
-			// TODO Auto-generated method stub
+		public List<Map<String, String>> getItem(int position) {
+			// TODO Auto-generated method stub			
 			List<Map<String, String>> lists = new ArrayList<Map<String,String>>();
-			Map<String, String> map = new HashMap<String, String>();
-			map.put("name", names.get(position));
-			map.put("code", codes.get(position));
-			map.put("icon", icons.get(position));
-			lists.add(map);
+			
+			for (int i = 0; i < getCount(); i++) {
+				Map<String, String> map = new HashMap<String, String>();
+				map.put("name", sortList.get(i).getName());
+				map.put("code", codes.get(i));
+				lists.add(map);
+			}
+			
 			return lists;
 		}
 
@@ -264,28 +276,91 @@ public class MainActivity extends Activity implements OnItemClickListener, OnQue
 			return position;
 		}
 
+		final class ViewHolder {
+			TextView txtLetter;
+			TextView txtTitle;
+		}
+		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			// TODO Auto-generated method stub
-			View view ;
+
+			ViewHolder viewHolder = null;			
 			
-			view = LayoutInflater.from(mContext)
-					.inflate(R.layout.company_list, null);
-			((TextView)view.findViewById(R.id.company_name)).setText(names.get(position));
-			ImageView imageView = (ImageView)view.findViewById(R.id.company_icon);
-			try {
-				if(icons.get(position) !=null && !icons.get(position).equals("")) {
-					Bitmap bm = BitmapFactory.decodeStream(getAssets().open(icons.get(position)));
-					imageView.setImageBitmap(bm);
-				} else {
-					imageView.setImageResource(R.drawable.ic_launcher);
-				}
-			} catch (Exception e) {
-				// TODO: handle exception
-				Log.i("wx", "adapter=== " + e.getMessage());
+			if(convertView == null) {
+				viewHolder = new ViewHolder();
+				convertView = LayoutInflater.from(mContext)
+						.inflate(R.layout.sort_list, null);
+				viewHolder.txtLetter = (TextView)convertView.findViewById(R.id.catalog);
+				viewHolder.txtTitle = (TextView)convertView.findViewById(R.id.title);
+				convertView.setTag(viewHolder);
+			} else {
+				viewHolder = (ViewHolder)convertView.getTag();
 			}
-			return view;
+			
+			int section = getSectionForPosition(position);
+			if(position == getPositionForSection(section)) {
+				viewHolder.txtLetter.setVisibility(View.VISIBLE);
+				viewHolder.txtLetter.setText(sortList.get(position).getLettters());
+			} else {
+				viewHolder.txtLetter.setVisibility(View.GONE);
+			}
+			
+			viewHolder.txtTitle.setText(sortList.get(position).getName());
+			
+			return convertView;
 		}
 		
+		/**
+		 *	根据Listview的当前位置获取分类的首字母的char ascii值 
+		 */
+		public int getSectionForPosition(int position) {
+			return sortList.get(position).getLettters().charAt(0);
+		}
+		
+		/**
+		 * 根据分类的首字母的char ASCII值获取其第一次出现该首字母的位置
+		 */
+		@Override
+		public int getPositionForSection(int sectionIndex) {
+			// TODO Auto-generated method stub
+			for (int i = 0; i < getCount(); i++) {
+				String sort = sortList.get(i).getLettters();
+				char firstChar = sort.toUpperCase().charAt(0);
+				if(firstChar == sectionIndex) 
+					return i;				
+			}
+			
+			return -1;
+		}
+		
+		//当ListView数据变化时更新
+		public void updateListView(List<SortModel> sortList) {
+			this.sortList = sortList;
+			notifyDataSetChanged();
+		}
+		
+		@Override
+		public Object[] getSections() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	}
+	
+	class PinyinComparator implements Comparator<SortModel> {
+		/**
+		 * 对Listview里面的数据根据ABCD...的顺率排序
+		 */
+		@Override
+		public int compare(SortModel lhs, SortModel rhs) {
+			// TODO Auto-generated method stub
+			if(rhs.getLettters().equals("#")) {
+				return -1;
+			} else if(lhs.getLettters().equals("#")) {
+				return 1;
+			} else {
+				return lhs.getLettters().compareTo(rhs.getLettters());
+			}
+		}
 	}
 }
