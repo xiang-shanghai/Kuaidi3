@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Kuaidi</string>
-    <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="app_name">快递查询</string>
+    <string name="action_settings">设置</string>
+    
 	
     <string name="select_company">请选择快递公司查询：</string>
     <string name="dialog_message">正在初始化数据...</string>
@@ -11,4 +11,8 @@
     <string name="btn_search">查询</string>
     <string name="network_not_connected">网络未连接</string>
     <string name="action_bar_search">Search</string>
+    
+    <string name="tab_track">快递跟踪</string>
+    <string name="tab_favorite">常用</string>
+    <string name="tab_all">全部</string>
 </resources>
