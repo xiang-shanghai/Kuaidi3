@@ -3,6 +3,7 @@ package com.android.kuaidi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +55,7 @@ public class MainActivity extends Activity implements OnItemClickListener,
 	SearchView mSearchView;
 	SliderView sliderView;
 	MyAdapter sortAdapter;
+	List<SortModel> allSortList = new ArrayList<SortModel>();
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -110,11 +112,7 @@ public class MainActivity extends Activity implements OnItemClickListener,
 	public boolean onQueryTextChange(String newText) {
 		// TODO Auto-generated method stub
 		
-		if(TextUtils.isEmpty(newText)) {
-			
-		} else {
-			
-		}
+		updateList(newText);
 		return false;
 	}
 
@@ -124,7 +122,30 @@ public class MainActivity extends Activity implements OnItemClickListener,
 		return false;
 	}
 
-
+	void updateList(String filter) {
+		List<SortModel> sortList = sortAdapter.getSortLists();
+		if(sortList == null ||sortList.size() <= 0) {
+			sortList = allSortList;
+		}
+		List<SortModel> newList = new ArrayList<SortModel>();
+		
+		
+		if(TextUtils.isEmpty(filter)) {
+			newList = allSortList;
+		} else {
+			newList.clear();
+			for(SortModel model : sortList) {
+				String name = model.getName();
+				if(name.toUpperCase().indexOf(filter.toString().toUpperCase()) != -1
+						||new CharacterParser().getSelling(name).toUpperCase().startsWith(filter.toString().toUpperCase())) {
+					newList.add(model);
+				}
+			}			
+		}
+		
+		Collections.sort(newList, new PinyinComparator());
+		sortAdapter.updateListView(newList);
+	}
 
 	class InitThread extends Thread {
 		@Override
@@ -183,7 +204,7 @@ public class MainActivity extends Activity implements OnItemClickListener,
 					codes.add(company.getCode());
 				}
 				
-				List<SortModel> sortList = new ArrayList<SortModel>();
+				//List<SortModel> sortList = new ArrayList<SortModel>();
 				for (int i = 0; i < names.size(); i++) {
 					SortModel sortModel = new SortModel();
 					sortModel.setName(names.get(i));
@@ -192,35 +213,32 @@ public class MainActivity extends Activity implements OnItemClickListener,
 					String sortString = pinyin.substring(0, 1).toUpperCase();
 					//判断是否是英文字母
 					if(sortString.matches("[A-Z]")) {
-						sortModel.setLettters(sortString.toUpperCase());
+						sortModel.setLettters(sortString.toUpperCase()); //toUpperCase转为大写字母
 					} else {
 						sortModel.setLettters("#");
 					}
 					
-					sortList.add(sortModel);
+					allSortList.add(sortModel);
 				}
 				
-				sortAdapter = new MyAdapter(MainActivity.this, sortList, codes);
+				//根据a-z排序数据源
+				Collections.sort(allSortList, new PinyinComparator());
+				sortAdapter = new MyAdapter(MainActivity.this, allSortList, codes);
 				listView.setAdapter(sortAdapter);
-				
-				
 				
 				dialog.dismiss();
 				break;
 
 			default:
 				break;
-			}
-			
+			}			
 		}
 	}
-	
-	
-	
+		
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		// TODO Auto-generated method stub
-		List<Map<String, String>> lists = (List<Map<String,String>>)listView.getItemAtPosition(position);
+		List<Map<String, String>> lists = sortAdapter.getItem(position);
 		Map<String, String> map = lists.get(0);
 		String company_name = map.get("name");
 		String company_code = map.get("code");
@@ -249,6 +267,13 @@ public class MainActivity extends Activity implements OnItemClickListener,
 			this.codes = codes;
 		}
 		
+		public List<SortModel> getSortLists() {
+			if(sortList.size() > 0) {
+				return sortList;
+			}
+			return null;
+		}
+		
 		@Override
 		public int getCount() {
 			// TODO Auto-generated method stub
@@ -260,12 +285,11 @@ public class MainActivity extends Activity implements OnItemClickListener,
 			// TODO Auto-generated method stub			
 			List<Map<String, String>> lists = new ArrayList<Map<String,String>>();
 			
-			for (int i = 0; i < getCount(); i++) {
-				Map<String, String> map = new HashMap<String, String>();
-				map.put("name", sortList.get(i).getName());
-				map.put("code", codes.get(i));
-				lists.add(map);
-			}
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("name", sortList.get(position).getName());
+			map.put("code", codes.get(position));
+			lists.add(map);
+
 			
 			return lists;
 		}
@@ -347,6 +371,11 @@ public class MainActivity extends Activity implements OnItemClickListener,
 		}
 	}
 	
+	/**
+	 * Java中使用Comparator对集合对象或者数组对象进行排序
+	 * @author Administrator
+	 *
+	 */
 	class PinyinComparator implements Comparator<SortModel> {
 		/**
 		 * 对Listview里面的数据根据ABCD...的顺率排序

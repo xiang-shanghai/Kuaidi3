@@ -1,6 +1,7 @@
 package com.android.kuaidi;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -101,6 +102,8 @@ public class SliderView extends View{
 				}
 				if(mTextDialog != null) {
 					mTextDialog.setText(LETTERS[curIndex]);
+					mTextDialog.setBackgroundColor(Color.GRAY);
+					mTextDialog.setTextColor(Color.RED);
 					mTextDialog.setVisibility(View.VISIBLE);					
 				}
 				chooseIndex = curIndex;
