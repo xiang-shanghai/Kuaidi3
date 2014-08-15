@@ -50,8 +50,8 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class AllFragment extends ListFragment /*implements OnItemClickListener, 
-															OnQueryTextListener*/{
+public class AllFragment extends Fragment implements OnItemClickListener, 
+															OnQueryTextListener{
 	ListView listView;
 	ProgressDialog dialog;
 	SearchView mSearchView;
@@ -63,23 +63,18 @@ public class AllFragment extends ListFragment /*implements OnItemClickListener,
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
-		return inflater.inflate(R.layout.activity_main, container, false);
-	}
-	
-	
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
-		super.onCreate(savedInstanceState);
+		//LayoutInflater inflater = LayoutInflater.from(getActivity());
+		View view = inflater.inflate(R.layout.activity_main, container, false);
 		
 		dialog = new ProgressDialog(getActivity());
 		dialog.setMessage(getString(R.string.dialog_message));
 		dialog.show();
 		
-		listView = (ListView)getActivity().findViewById(R.id.company_list);
-		//listView.setOnItemClickListener(this);
 		
-		sliderView = (SliderView)getActivity().findViewById(R.id.sliderview);
+		listView = (ListView)view.findViewById(R.id.company_list);
+		listView.setOnItemClickListener(this);
+		
+		sliderView = (SliderView)view.findViewById(R.id.sliderview);
 		sliderView.setTextView((TextView)getActivity().findViewById(R.id.dialog));
 		sliderView.setOnTouchingLettersChangedListener(new OnTouchingLettersChangedListener() {
 			
@@ -96,6 +91,33 @@ public class AllFragment extends ListFragment /*implements OnItemClickListener,
 		
 		
 		new InitThread().start();
+		
+		return view;
+	}
+	
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onCreate(savedInstanceState);
+		
+		
+	}
+	
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onActivityCreated(savedInstanceState);
+		
+		//Log.i("wx", "onActivityCreated");
+		
+		//new InitThread().start();
+	}
+	
+	@Override
+	public void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
 	}
 	
 //	@Override
@@ -273,6 +295,8 @@ public class AllFragment extends ListFragment /*implements OnItemClickListener,
 			this.mContext = context;
 			this.sortList = sortList;
 			this.codes = codes;
+			
+			Log.i("wx", "MyAdapter---");
 		}
 		
 		public List<SortModel> getSortLists() {
@@ -285,6 +309,7 @@ public class AllFragment extends ListFragment /*implements OnItemClickListener,
 		@Override
 		public int getCount() {
 			// TODO Auto-generated method stub
+			Log.i("wx", "getCount---- " + this.sortList.size());
 			return this.sortList.size();
 		}
 
@@ -316,7 +341,7 @@ public class AllFragment extends ListFragment /*implements OnItemClickListener,
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			// TODO Auto-generated method stub
-
+			Log.i("wx", "getView---");
 			ViewHolder viewHolder = null;			
 			
 			if(convertView == null) {
@@ -328,7 +353,7 @@ public class AllFragment extends ListFragment /*implements OnItemClickListener,
 				convertView.setTag(viewHolder);
 			} else {
 				viewHolder = (ViewHolder)convertView.getTag();
-			}
+			} 
 			
 			int section = getSectionForPosition(position);
 			if(position == getPositionForSection(section)) {
