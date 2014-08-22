@@ -15,4 +15,9 @@
     <string name="tab_track">快递跟踪</string>
     <string name="tab_favorite">常用</string>
     <string name="tab_all">全部</string>
+    
+    <string name="favorite_del">删除</string>
+    <string name="favorite_empty">还没有添加常用快递</string>
+    <string name="favorite_add">点此添加</string>
+    
 </resources>

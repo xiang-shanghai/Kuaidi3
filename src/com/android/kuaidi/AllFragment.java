@@ -15,6 +15,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import com.android.kuaidi.SliderView.OnTouchingLettersChangedListener;
 import com.android.kuaidi.utils.CompanyHandler;
+import com.android.kuaidi.utils.SQHelper;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,18 +34,24 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnCreateContextMenuListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.Toast;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
@@ -58,7 +65,7 @@ public class AllFragment extends Fragment implements OnItemClickListener,
 	SliderView sliderView;
 	MyAdapter sortAdapter;
 	List<SortModel> allSortList = new ArrayList<SortModel>();
-	
+	int index_long = -1;
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -73,6 +80,19 @@ public class AllFragment extends Fragment implements OnItemClickListener,
 		
 		listView = (ListView)view.findViewById(R.id.company_list);
 		listView.setOnItemClickListener(this);
+		listView.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+					int pos, long arg3) {
+				// TODO Auto-generated method stub
+				index_long = pos;
+				longClick();
+				//itemLongClick(pos);
+				return false;
+			}
+			
+		});
 		
 		sliderView = (SliderView)view.findViewById(R.id.sliderview);
 		sliderView.setTextView((TextView)getActivity().findViewById(R.id.dialog));
@@ -95,6 +115,68 @@ public class AllFragment extends Fragment implements OnItemClickListener,
 		return view;
 	}
 	
+//	@Override
+//	public void onCreateContextMenu(ContextMenu menu, View v,
+//			ContextMenuInfo menuInfo) {
+//		// TODO Auto-generated method stub
+//		super.onCreateContextMenu(menu, v, menuInfo);
+//		menu.add(0, 0, 0, "添加到常用快递");
+//	}
+	
+	private void longClick() {
+		listView.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
+			
+			@Override
+			public void onCreateContextMenu(ContextMenu menu, View v,
+					ContextMenuInfo menuInfo) {
+				// TODO Auto-generated method stub				
+				menu.add(0, 0, 0, "添加到常用快递");
+			}
+		});
+	}
+//	
+//	void itemLongClick(int pos) {
+//		SQHelper helper = new SQHelper(getActivity());
+//		List<Map<String, String>> lists = sortAdapter.getItem(pos);
+//		Map<String, String> map = lists.get(0);
+//		String company_name = map.get("name");
+//		String company_code = map.get("code");
+//		
+//		long result = helper.addFavorite(company_name, company_code);
+//		if(result == -1) {
+//			Toast.makeText(getActivity(), "添加失败", Toast.LENGTH_SHORT).show();				
+//		} else {
+//			Toast.makeText(getActivity(), "添加成功", Toast.LENGTH_SHORT).show();
+//		}
+//	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		// TODO Auto-generated method stub
+		switch (item.getItemId()) {
+		case 0:
+			SQHelper helper = new SQHelper(getActivity());
+			int pos = index_long;
+			index_long = -1;
+			List<Map<String, String>> lists = sortAdapter.getItem(pos);
+			Map<String, String> map = lists.get(0);
+			String company_name = map.get("name");
+			String company_code = map.get("code");
+			
+			long result = helper.addFavorite(company_name, company_code);
+			if(result == -1) {
+				Toast.makeText(getActivity(), "添加失败", Toast.LENGTH_SHORT).show();				
+			} else {
+				Toast.makeText(getActivity(), "添加成功", Toast.LENGTH_SHORT).show();
+			}
+			break;
+
+		default:
+			break;
+		}
+		
+		return super.onContextItemSelected(item);		
+	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -296,7 +378,7 @@ public class AllFragment extends Fragment implements OnItemClickListener,
 			this.sortList = sortList;
 			this.codes = codes;
 			
-			Log.i("wx", "MyAdapter---");
+			//Log.i("wx", "MyAdapter---");
 		}
 		
 		public List<SortModel> getSortLists() {
@@ -309,7 +391,7 @@ public class AllFragment extends Fragment implements OnItemClickListener,
 		@Override
 		public int getCount() {
 			// TODO Auto-generated method stub
-			Log.i("wx", "getCount---- " + this.sortList.size());
+			//Log.i("wx", "getCount---- " + this.sortList.size());
 			return this.sortList.size();
 		}
 
